@@ -40,12 +40,12 @@ def load_invoice(invoice: Invoice, engine: Engine | None = None) -> int:
                 INSERT INTO invoices (
                     invoice_number, invoice_date, due_date,
                     vendor_name, vendor_address,
-                    customer_name, customer_address,
+                    customer_name, customer_address, customer_number,
                     currency, subtotal, tax_amount, total_amount, source_file
                 ) VALUES (
                     :invoice_number, :invoice_date, :due_date,
                     :vendor_name, :vendor_address,
-                    :customer_name, :customer_address,
+                    :customer_name, :customer_address, :customer_number,
                     :currency, :subtotal, :tax_amount, :total_amount, :source_file
                 )
                 ON CONFLICT (invoice_number) DO NOTHING
@@ -65,8 +65,13 @@ def load_invoice(invoice: Invoice, engine: Engine | None = None) -> int:
             conn.execute(
                 text(
                     """
-                    INSERT INTO line_items (invoice_id, description, quantity, unit_price, line_total)
-                    VALUES (:invoice_id, :description, :quantity, :unit_price, :line_total)
+                    INSERT INTO line_items (
+                        invoice_id, description, quantity, unit_price, line_total,
+                        item, store_number, order_date, offer_number, unit_of_measure
+                    ) VALUES (
+                        :invoice_id, :description, :quantity, :unit_price, :line_total,
+                        :item, :store_number, :order_date, :offer_number, :unit_of_measure
+                    )
                     """
                 ),
                 {"invoice_id": invoice_id, **item.model_dump()},

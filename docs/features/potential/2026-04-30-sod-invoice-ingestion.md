@@ -1,13 +1,8 @@
-# sod-invoice-ingestion (Issue #1)
+# sod-invoice-ingestion (Potential)
 
 - Date captured: 2026-04-30
 - Author: Dan Moisan
-- Status: Promoted -> docs/features/active/sod-invoice-ingestion/ (Issue #1)
-
-- Issue: #1
-- Issue URL: https://github.com/drmoisan/invoice-etl/issues/1
-- Last Updated: 2026-04-30
-- Work Mode: full-feature
+- Status: Draft
 
 ## Problem / Why
 
@@ -26,14 +21,14 @@ The existing ETL pipeline extracts a generic set of invoice fields (invoice numb
 
 ## Acceptance Criteria (early draft)
 
-- [x] `LineItem` model includes: `item`, `store_number`, `order_date`, `offer_number`, `unit_of_measure` fields with correct types.
-- [x] `Invoice` model includes: `customer_number` field.
-- [x] `transform_pages()` correctly parses line items from `SOD00093649.pdf` text, returning all per-row fields.
-- [x] `load_invoice()` persists the new `LineItem` and `Invoice` fields to the database.
-- [x] `docker/init.sql` schema includes updated `line_items` and `invoices` column definitions.
-- [x] All existing tests continue to pass (zero regressions).
-- [x] New unit tests cover the SOD transformer with ≥ 80% branch coverage on the new parser logic.
-- [x] Full toolchain (Black + Ruff + Pyright strict + pytest) passes without errors.
+- [ ] `LineItem` model includes: `item`, `store_number`, `order_date`, `offer_number`, `unit_of_measure` fields with correct types.
+- [ ] `Invoice` model includes: `customer_number` field.
+- [ ] `transform_pages()` correctly parses line items from `SOD00093649.pdf` text, returning all per-row fields.
+- [ ] `load_invoice()` persists the new `LineItem` and `Invoice` fields to the database.
+- [ ] `docker/init.sql` schema includes updated `line_items` and `invoices` column definitions.
+- [ ] All existing tests continue to pass (zero regressions).
+- [ ] New unit tests cover the SOD transformer with ≥ 80% branch coverage on the new parser logic.
+- [ ] Full toolchain (Black + Ruff + Pyright strict + pytest) passes without errors.
 
 ## Constraints & Risks
 
@@ -55,3 +50,4 @@ The existing ETL pipeline extracts a generic set of invoice fields (invoice numb
 
 - [ ] Promote to GitHub issue (feature request template)
 - [ ] Create `docs/features/active/sod-invoice-ingestion/` folder from the template
+
