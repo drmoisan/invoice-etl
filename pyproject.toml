@@ -3,6 +3,7 @@ name = "invoice-etl"
 version = "0.1.0"
 description = "ETL pipeline for extracting transaction data from customer invoice PDFs into PostgreSQL."
 authors = []
+license = "MIT"
 readme = "README.md"
 packages = [{ include = "invoice_etl", from = "src" }]
 
