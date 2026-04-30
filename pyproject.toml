@@ -53,8 +53,36 @@ known-first-party = ["invoice_etl"]
 # Pyright
 # ---------------------------------------------------------------------------
 [tool.pyright]
+include = ["src", "tests"]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
+venvPath = "."
+venv = ".venv"
+analyzeUnannotatedFunctions = true
+deprecateTypingAliases = true
+strictDictionaryInference = true
+strictListInference = true
+strictSetInference = true
+reportImportCycles = "error"
+reportConstantRedefinition = "error"
+reportMissingImports = "error"
+reportMissingTypeStubs = "error"
+reportPrivateUsage = "error"
+reportPropertyTypeMismatch = "error"
+reportUnknownArgumentType = "error"
+reportUnknownLambdaType = "error"
+reportUnknownMemberType = "error"
+reportUnknownParameterType = "error"
+reportUnknownVariableType = "error"
+reportUnnecessaryTypeIgnoreComment = "error"
+reportUntypedBaseClass = "error"
+reportUntypedClassDecorator = "error"
+reportUntypedFunctionDecorator = "error"
+reportUntypedNamedTuple = "error"
+
+[[tool.pyright.executionEnvironments]]
+root = "."
+extraPaths = ["src"]
 
 # ---------------------------------------------------------------------------
 # Pytest
