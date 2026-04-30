@@ -9,6 +9,7 @@ CREATE TABLE IF NOT EXISTS invoices (
     vendor_address  TEXT,
     customer_name   TEXT,
     customer_address TEXT,
+    customer_number TEXT,
     currency        CHAR(3),
     subtotal        NUMERIC(18, 2),
     tax_amount      NUMERIC(18, 2),
@@ -24,6 +25,11 @@ CREATE TABLE IF NOT EXISTS line_items (
     quantity        NUMERIC(18, 4),
     unit_price      NUMERIC(18, 4),
     line_total      NUMERIC(18, 2),
+    item            TEXT,
+    store_number    TEXT,
+    order_date      DATE,
+    offer_number    TEXT,
+    unit_of_measure TEXT,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

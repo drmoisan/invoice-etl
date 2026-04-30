@@ -27,7 +27,7 @@ pyrightconfig.json
 Thumbs.db
 
 # IDEs
-.vscode/settings.json
 .idea/
 
 artifacts
+memories

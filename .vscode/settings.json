@@ -1,0 +1,24 @@
+{
+  "python.defaultInterpreterPath": "${workspaceFolder}/.venv/Scripts/python.exe",
+  "editor.formatOnSave": true,
+  "[python]": {
+    "editor.defaultFormatter": "ms-python.black-formatter",
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  },
+  // The Ruff extension 2026.40.0+ activates on onLanguage:markdown and defaults to the
+  // bundled Ruff binary (0.15.10), which raises E999 when the native server processes .md
+  // files sent by VS Code. Explicitly setting ruff.path ensures the native server uses
+  // the Poetry-managed Ruff 0.4.10 binary, which has no markdown support and will not
+  // process .md files. This is preferred over nativeServer=off (deprecated LSP path).
+  "ruff.path": ["${workspaceFolder}/.venv/Scripts/ruff.exe"],
+  "ruff.enable": true,
+  "python-envs.defaultEnvManager": "ms-python.python:poetry",
+  "python-envs.defaultPackageManager": "ms-python.python:poetry",
+  "python.testing.pytestEnabled": true,
+  "python.testing.unittestEnabled": false,
+  "python.testing.pytestArgs": ["tests"],
+  "python.testing.autoTestDiscoverOnSaveEnabled": true
+  
+}
