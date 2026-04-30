@@ -1,7 +1,25 @@
 ---
-agent: 'comment_remediator'
-description: 'Remediate a specified Python scope so docstrings and intent comments comply with self-explanatory-code-commenting rules, following all repo policies.'
-tools: ['search/listDirectory', 'search/fileSearch', 'search/codebase', 'search/usages', 'search/changes', 'read/readFile', 'edit/createFile', 'edit/createDirectory', 'edit/editFiles', 'execute/runTask', 'execute/createAndRunTask', 'execute/runInTerminal', 'execute/getTerminalOutput', 'read/problems', 'execute/testFailure', 'todo']
+agent: "comment_remediator"
+description: "Remediate a specified Python scope so docstrings and intent comments comply with self-explanatory-code-commenting rules, following all repo policies."
+tools:
+  [
+    "search/listDirectory",
+    "search/fileSearch",
+    "search/codebase",
+    "search/usages",
+    "search/changes",
+    "read/readFile",
+    "edit/createFile",
+    "edit/createDirectory",
+    "edit/editFiles",
+    "execute/runTask",
+    "execute/createAndRunTask",
+    "execute/runInTerminal",
+    "execute/getTerminalOutput",
+    "read/problems",
+    "execute/testFailure",
+    "todo",
+  ]
 ---
 
 # Comment Remediation Loader
@@ -10,11 +28,12 @@ Use this prompt to launch `comment_remediator` on any scope (single file, folder
 
 ## Inputs
 
-- **Scope** (required): Path or glob to remediate (e.g., `src/lexile_corpus_tuner/.../enrich_original_pub_year/**`).
+- **Scope** (required): Path or glob to remediate (e.g., `src/invoice_etl/transform/**`).
 
 ## Policy Order
 
 Apply in this sequence:
+
 1. `.github/copilot-instructions.md`
 2. `.github/instructions/general-code-change.instructions.md`
 3. `.github/instructions/general-unit-test.instructions.md`
@@ -37,8 +56,8 @@ Apply in this sequence:
    - `poetry run black .`
    - `poetry run ruff check`
    - `poetry run pyright`
-   - `poetry run pytest`
-   Restart from Black after any change or failure; resolve all errors before finishing.
+   - `poetry run pytest --cov=invoice_etl --cov-report=term-missing`
+     Restart from Black after any change or failure; resolve all errors before finishing.
 
 ## Completion Criteria
 

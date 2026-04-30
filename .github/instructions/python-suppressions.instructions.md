@@ -9,11 +9,13 @@ description: "Pre-authorized patterns for # noqa and # type: ignore suppressions
 This policy defines the **only** patterns of `# noqa` and `# type: ignore` suppressions that are pre-authorized for use in Python code without explicit user approval.
 
 **Authorization requirement:**
+
 - All `# noqa` and `# type: ignore` suppressions must either:
   1. **Match a pre-authorized pattern** defined in this file, OR
   2. **Have explicit user approval** for that specific suppression
 
 **If you encounter an error that seems to require a suppression not matching a pre-authorized pattern:**
+
 1. First, attempt to resolve it without a suppression (refactor, restructure, use approved patterns)
 2. If that fails, try at least five more distinct approaches
 3. Continue iterating until you solve the problem or demonstrate why each approach fails
@@ -32,6 +34,7 @@ This policy defines the **only** patterns of `# noqa` and `# type: ignore` suppr
 Subprocess calls where the executable is validated via `shutil.which()` before use.
 
 **Required pattern:**
+
 ```python
 # Validate executable exists and resolve full path
 exe = shutil.which("tool_name")
@@ -47,11 +50,13 @@ subprocess.run([exe, ...])  # noqa: S603 - static analysis can't verify runtime 
 
 **Justification:**  
 Cross-platform compatibility requires runtime PATH resolution via `shutil.which()`. Static analysis cannot trace the runtime validation, but the code is safe because:
+
 1. The executable path is resolved from PATH (not user input)
 2. We verify it exists before use
 3. Hardcoding platform-specific paths like `/usr/bin/git` or `C:\\Program Files\\Git\\bin\\git.exe` would break portability
 
 **Examples:**
+
 - Git operations: `git_exe = shutil.which("git")`
 - Clipboard commands: `clip_exe = shutil.which("pbcopy")`
 - Any system tool resolved from PATH
@@ -66,6 +71,7 @@ Cross-platform compatibility requires runtime PATH resolution via `shutil.which(
 Optional third-party dependencies that lack type stubs or `py.typed` marker.
 
 **Required pattern:**
+
 ```python
 try:
     import untyped_library  # type: ignore[import-untyped]
@@ -76,15 +82,17 @@ except ImportError:
 ```
 
 **Required context:**
+
 - Import must be in a try/except ImportError block
 - Library must be optional (not in core dependencies)
-- No type stubs available (checked via typeshed or types-* packages)
+- No type stubs available (checked via typeshed or types-\* packages)
 - Library lacks `py.typed` marker (required by PEP 561)
 
 **Justification:**  
 Optional dependencies may not have type stubs or proper PEP 561 type markers. Rather than exclude entire files from type checking, we use targeted suppressions on the import line while wrapping usage in properly typed adapter functions.
 
 **Examples:**
+
 - `pyperclip` (has inline type hints but lacks `py.typed` marker)
 - `tkinter` (stdlib but excluded from type checking, no stubs)
 - Platform-specific optional libraries
@@ -97,6 +105,7 @@ Optional dependencies may not have type stubs or proper PEP 561 type markers. Ra
 Test mock/stub implementations that must match interface signatures but don't use all parameters.
 
 **Required pattern:**
+
 ```python
 class MockPath:
     def mkdir(self, parents: bool, exist_ok: bool) -> None:  # noqa: ARG002 - mock API signature
@@ -105,6 +114,7 @@ class MockPath:
 ```
 
 **Required context:**
+
 - Must be in test code (tests/ directory)
 - Must be implementing a known interface (Path, Tkinter widgets, etc.)
 - Cannot use the parameters without defeating the purpose of the mock
@@ -113,9 +123,10 @@ class MockPath:
 `# noqa: ARG002 - mock API signature` or `# noqa: ARG002 - match [InterfaceName] API`
 
 **Justification:**  
-Test mocks must match real API signatures for type safety and IDE support, but stub implementations often don't need all parameters. Alternatives (removing parameters, using *args/**kwargs) break type safety.
+Test mocks must match real API signatures for type safety and IDE support, but stub implementations often don't need all parameters. Alternatives (removing parameters, using \*args/\*\*kwargs) break type safety.
 
 **Examples:**
+
 - Mock Path.mkdir(parents, exist_ok)
 - Mock Tkinter widget constructors
 - Protocol method stubs in tests
@@ -128,6 +139,7 @@ Test mocks must match real API signatures for type safety and IDE support, but s
 Typer CLI option declarations where Option() must be evaluated at import time.
 
 **Required pattern:**
+
 ```python
 def cli_command(
     input_file: Path = typer.Option(..., exists=True),  # noqa: B008 - Typer framework pattern
@@ -137,6 +149,7 @@ def cli_command(
 ```
 
 **Required context:**
+
 - Must be Typer option declaration in CLI function signature
 - Typer framework requires evaluation at import time for CLI metadata
 - No alternative within Typer's declarative pattern
@@ -148,6 +161,7 @@ def cli_command(
 Typer's declarative CLI pattern evaluates Option() at import time to build CLI metadata. This is framework design, not a code smell. Alternative (procedural approach) would require rewriting entire CLI layer.
 
 **Examples:**
+
 - typer.Option() in function signatures
 - typer.Argument() in function signatures
 
@@ -159,6 +173,7 @@ Typer's declarative CLI pattern evaluates Option() at import time to build CLI m
 Modules used for both runtime and type hints (pytest fixtures, Typer type hints, etc.).
 
 **Required pattern:**
+
 ```python
 import pytest  # noqa: TCH002 - pytest required at runtime for fixtures
 
@@ -166,6 +181,7 @@ from pathlib import Path  # noqa: TCH003 - Path required at runtime for Typer an
 ```
 
 **Required context:**
+
 - Module must be used at runtime (fixtures, Typer CLI, runtime isinstance checks)
 - Cannot move to TYPE_CHECKING block without breaking functionality
 - Not just for type hints
@@ -178,6 +194,7 @@ from pathlib import Path  # noqa: TCH003 - Path required at runtime for Typer an
 Some modules serve dual roles: type hints AND runtime functionality. Moving to TYPE_CHECKING block breaks runtime behavior. Duplicating imports violates DRY.
 
 **Examples:**
+
 - pytest (fixtures, marks, decorators)
 - Path (Typer CLI types + file operations)
 - collections.abc (runtime Protocol checks + type hints)
@@ -190,6 +207,7 @@ Some modules serve dual roles: type hints AND runtime functionality. Moving to T
 Accessing documented, trusted HTTPS API endpoints with timeout.
 
 **Required pattern:**
+
 ```python
 req = urllib.request.Request(  # noqa: S310 - trusted HTTPS endpoint: archive.org
     "https://archive.org/metadata/identifier"
@@ -199,6 +217,7 @@ with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310 - trusted HT
 ```
 
 **Required context:**
+
 - URL must be validated HTTPS endpoint
 - Domain must be documented trusted source (archive.org, pypi.org, etc.)
 - Timeout must be set
@@ -211,6 +230,7 @@ with urllib.request.urlopen(req, timeout=30) as resp:  # noqa: S310 - trusted HT
 S310 flags ALL urllib calls indiscriminately. When accessing well-known, documented HTTPS APIs with timeouts, the security risk is minimal. Using requests library adds heavy dependency for simple GETs.
 
 **Examples:**
+
 - Internet Archive API
 - PyPI JSON API
 - GitHub API with known endpoints
@@ -223,6 +243,7 @@ S310 flags ALL urllib calls indiscriminately. When accessing well-known, documen
 Parsing user's own files or known-safe data sources (not untrusted network data).
 
 **Required pattern:**
+
 ```python
 import xml.etree.ElementTree as ET  # noqa: S314 - parsing trusted user EPUB files
 
@@ -230,6 +251,7 @@ root = ET.fromstring(container_xml)  # noqa: S314 - parsing trusted user EPUB fi
 ```
 
 **Required context:**
+
 - Parsing user's own local files (EPUB, configuration)
 - Parsing known-safe sources (Wikipedia dumps, curated datasets)
 - NOT parsing untrusted network data
@@ -242,6 +264,7 @@ root = ET.fromstring(container_xml)  # noqa: S314 - parsing trusted user EPUB fi
 S314 warns about XML entity expansion attacks from untrusted sources. User's own files and curated datasets are trusted. EPUB spec requires standard ElementTree. defusedxml incompatible with EPUB parsing requirements.
 
 **Examples:**
+
 - EPUB file parsing (user's own books)
 - Wikipedia XML dump processing
 - Configuration file parsing
@@ -254,6 +277,7 @@ S314 warns about XML entity expansion attacks from untrusted sources. User's own
 Top-level CLI exception handlers for user-friendly error messages and clean exits.
 
 **Required pattern:**
+
 ```python
 def main() -> None:
     """CLI entry point."""
@@ -267,6 +291,7 @@ def main() -> None:
 ```
 
 **Required context:**
+
 - Must be at CLI entry point (main, CLI command function)
 - Must log or display error with context
 - Must exit cleanly (not re-raise without handling)
@@ -278,13 +303,15 @@ def main() -> None:
 **Justification:**  
 CLI tools must provide user-friendly error messages instead of stack traces. Cannot predict all possible exception types. This is ONLY for user-facing CLI, NOT library code.
 
-**Restriction:**  
+**Restriction:**
+
 - **ONLY at CLI entry points**
 - NOT in internal/library functions
 - NOT in test code
 - Must include error logging/display
 
 **Examples:**
+
 - Typer command entry points
 - Script main() functions
 - CLI error wrapper functions
@@ -297,6 +324,7 @@ CLI tools must provide user-friendly error messages instead of stack traces. Can
 Loading known model artifacts from hardcoded trusted local paths.
 
 **Required pattern:**
+
 ```python
 # Model path is hardcoded, not from user input
 MODEL_PATH = Path(__file__).parent / "artifacts" / "lexile_model.pkl"
@@ -308,6 +336,7 @@ def load_model() -> Model:
 ```
 
 **Required context:**
+
 - Path must be hardcoded or validated (not from user input/CLI args)
 - Loading known model artifacts from trusted local paths
 - Not deserializing user-provided pickle files
@@ -318,12 +347,14 @@ def load_model() -> Model:
 **Justification:**  
 ML models contain NumPy arrays not serializable to JSON. HDF5 would require retraining all models. Pickle format doesn't support pre-validation. Safe when loading from known paths.
 
-**Restriction:**  
+**Restriction:**
+
 - Path MUST be hardcoded or validated before use
 - NOT from user input/command-line arguments
 - Only for ML model/artifact loading
 
 **Examples:**
+
 - Loading pre-trained ML models
 - Loading tokenizer artifacts
 - Loading vocabulary caches
@@ -336,6 +367,7 @@ ML models contain NumPy arrays not serializable to JSON. HDF5 would require retr
 Test fixtures with example paths and test data literals.
 
 **Required pattern:**
+
 ```python
 def test_path_handling():
     """Test with concrete example path."""
@@ -349,6 +381,7 @@ def test_token_parsing():
 ```
 
 **Required context:**
+
 - Must be in test code only
 - Literal paths/strings for test clarity
 - Not actual secrets or production paths
@@ -360,11 +393,13 @@ def test_token_parsing():
 **Justification:**  
 Test code needs concrete examples for readability. Using temp directories or variables adds complexity without benefit. These are not real paths or secrets.
 
-**Restriction:**  
+**Restriction:**
+
 - **ONLY in test files** (tests/ directory)
 - Not in production code
 
 **Examples:**
+
 - Example paths in test assertions
 - Test token/string literals
 - Mock credential strings in tests
@@ -381,17 +416,19 @@ Beyond the S110 pattern documented earlier, the following patterns are **NOT** p
 Parent-relative imports (`from ..module import`) reduce code clarity and create coupling.
 
 **Recommended alternative pattern:**
+
 ```python
 # Instead of:
 from ..gutenberg_query_core import QueryGroupModel  # noqa: TID252
 
 # Use absolute imports:
-from lexile_corpus_tuner.lexile_scoring_model.pipeline_scripts.gutenberg_query_core import (
-    QueryGroupModel,
+from invoice_etl.transform.invoice_transformer import (
+    transform_pages,
 )
 ```
 
 **Why this is better:**
+
 - Explicit full path shows exact module location
 - Works regardless of execution context
 - Better IDE support and refactoring tools
@@ -405,6 +442,7 @@ from lexile_corpus_tuner.lexile_scoring_model.pipeline_scripts.gutenberg_query_c
 Using partial paths like `"git"` instead of full paths creates security risks.
 
 **Recommended alternative pattern:**
+
 ```python
 import shutil
 import subprocess
@@ -424,6 +462,7 @@ result = subprocess.run(
 ```
 
 **Why this is better:**
+
 - Validates executable exists before use
 - Uses full path from PATH resolution
 - Clear error if executable not found
@@ -437,6 +476,7 @@ result = subprocess.run(
 Docstring style rules are not technical limitations, just formatting preferences.
 
 **Recommended alternative pattern:**
+
 ```python
 # Instead of:
 def copy(self, text: str) -> None:  # noqa: D401
@@ -448,6 +488,7 @@ def copy(self, text: str) -> None:
 ```
 
 **Why this is better:**
+
 - Follows PEP 257 docstring conventions
 - More readable and consistent
 - No technical reason for suppression
@@ -460,6 +501,7 @@ def copy(self, text: str) -> None:
 Unused imports should be removed or used, not suppressed.
 
 **Recommended alternative pattern:**
+
 ```python
 # Instead of:
 from typing import Optional  # noqa: F401
@@ -477,6 +519,7 @@ __all__ = ["Symbol"]
 ```
 
 **Why this is better:**
+
 - Cleaner code
 - Faster import times
 - Clear signal of what's actually used
@@ -489,6 +532,7 @@ __all__ = ["Symbol"]
 Modern Python supports timezone-aware datetime; naive datetime causes bugs.
 
 **Recommended alternative pattern:**
+
 ```python
 from datetime import datetime, timezone
 
@@ -500,6 +544,7 @@ now = datetime.now(timezone.utc)
 ```
 
 **Why this is better:**
+
 - Avoids timezone-related bugs
 - Explicit about timezone handling
 - Modern Python best practice
@@ -511,6 +556,7 @@ now = datetime.now(timezone.utc)
 ### Pre-authorized pattern checklist:
 
 Before using a suppression, verify:
+
 - [ ] Pattern **exactly** matches a pre-authorized pattern above
 - [ ] Required comment format is used verbatim
 - [ ] All contextual requirements are met (validation, fallback chain, try/except, etc.)
@@ -519,6 +565,7 @@ Before using a suppression, verify:
 ### Requesting new pre-authorized patterns:
 
 If you encounter a recurring pattern that should be pre-authorized:
+
 1. Document the pattern with full justification
 2. Show why it's deterministic and can be codified
 3. Propose the required comment format
@@ -527,6 +574,7 @@ If you encounter a recurring pattern that should be pre-authorized:
 ### Audit checklist:
 
 When reviewing code:
+
 - [ ] All suppressions either match pre-authorized patterns OR have documented user approval
 - [ ] Comment format matches required format exactly
 - [ ] No suppressions are broader than necessary (file-level vs. line-level)
@@ -537,6 +585,7 @@ When reviewing code:
 ## Non-authorized Patterns (Explicitly Prohibited)
 
 The following are **NOT** pre-authorized and require case-by-case approval:
+
 - File-level suppressions (e.g., adding paths to `pyproject.toml` ignores)
 - Broad exception catching without validation (`subprocess.run([user_input, ...])  # noqa: S603`)
 - Disabling security rules for convenience without justification
@@ -548,6 +597,7 @@ The following are **NOT** pre-authorized and require case-by-case approval:
 Try-except-pass fallback chains often hide lazy design. If you know the correct method at design time (platform detection, environment variables, shutil.which() validation), you should implement explicit detection instead of relying on exception-based control flow.
 
 **Recommended alternative pattern:**
+
 ```python
 import shutil
 import sys
@@ -557,10 +607,10 @@ from functools import lru_cache
 def get_clipboard_command() -> str | None:
     """
     Detect the correct clipboard command for the current platform.
-    
+
     Returns:
         Command name if available, None if no clipboard support detected.
-    
+
     Side Effects:
         Caches result after first call for performance.
     """
@@ -579,12 +629,12 @@ def get_clipboard_command() -> str | None:
                     candidates = ["xclip", "wl-copy"]
         except FileNotFoundError:
             candidates = ["xclip", "wl-copy"]
-    
+
     # Validate candidates exist on PATH
     for cmd in candidates:
         if shutil.which(cmd):
             return cmd
-    
+
     return None
 
 # Usage
@@ -596,6 +646,7 @@ else:
 ```
 
 **Why this is better:**
+
 - Explicit platform detection makes behavior predictable
 - shutil.which() validates availability before use
 - Caching avoids repeated detection overhead
@@ -603,6 +654,7 @@ else:
 - No try-except-pass control flow
 
 **When exception-based fallback IS acceptable:**
+
 - Optional library imports where the library truly may or may not be installed
 - Cases where explicit detection is genuinely impossible (not just inconvenient)
 
