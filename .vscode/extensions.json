@@ -1,0 +1,24 @@
+{
+	// See http://go.microsoft.com/fwlink/?LinkId=827846
+	// for the documentation about the extensions.json format
+	"recommendations": [
+		"dbaeumer.vscode-eslint",
+		"ms-vscode.extension-test-runner",
+		"ms-python.python",
+		"ms-python.debugpy",
+		"zeshuaro.vscode-python-poetry",
+		"ms-python.black-formatter",
+		"charliermarsh.ruff",
+		"ms-python.vscode-pylance",		
+		"ms-vscode.powershell",
+		"mads-hartmann.bash-ide-vscode",
+		"ms-vscode-remote.remote-containers",
+		"mhutchie.git-graph",
+		"github.vscode-github-actions",
+		"GitHub.vscode-pull-request-github",
+		"jq-syntax-highlighting.jq-syntax-highlighting",
+		"ZainChen.json",
+		"bierner.markdown-checkbox",
+		"bierner.markdown-mermaid"
+	]
+}
