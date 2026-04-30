@@ -35,7 +35,8 @@ def load_invoice(invoice: Invoice, engine: Engine | None = None) -> int:
 
     with engine.begin() as conn:
         result = conn.execute(
-            text("""
+            text(
+                """
                 INSERT INTO invoices (
                     invoice_number, invoice_date, due_date,
                     vendor_name, vendor_address,
@@ -49,7 +50,8 @@ def load_invoice(invoice: Invoice, engine: Engine | None = None) -> int:
                 )
                 ON CONFLICT (invoice_number) DO NOTHING
                 RETURNING id
-                """),
+                """
+            ),
             invoice.model_dump(exclude={"line_items"}),
         )
         row = result.fetchone()
@@ -61,10 +63,12 @@ def load_invoice(invoice: Invoice, engine: Engine | None = None) -> int:
 
         for item in invoice.line_items:
             conn.execute(
-                text("""
+                text(
+                    """
                     INSERT INTO line_items (invoice_id, description, quantity, unit_price, line_total)
                     VALUES (:invoice_id, :description, :quantity, :unit_price, :line_total)
-                    """),
+                    """
+                ),
                 {"invoice_id": invoice_id, **item.model_dump()},
             )
 

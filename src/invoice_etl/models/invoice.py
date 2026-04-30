@@ -27,5 +27,5 @@ class Invoice(BaseModel):
     subtotal: Decimal | None = None
     tax_amount: Decimal | None = None
     total_amount: Decimal | None = None
-    line_items: list[LineItem] = Field(default_factory=list)
+    line_items: list[LineItem] = []
     source_file: str | None = None

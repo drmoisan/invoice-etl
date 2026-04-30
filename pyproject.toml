@@ -55,8 +55,6 @@ known-first-party = ["invoice_etl"]
 [tool.pyright]
 pythonVersion = "3.12"
 typeCheckingMode = "strict"
-venvPath = "."
-venv = ".venv"
 
 # ---------------------------------------------------------------------------
 # Pytest

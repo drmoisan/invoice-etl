@@ -5,9 +5,8 @@ from __future__ import annotations
 import logging
 import re
 from decimal import Decimal, InvalidOperation
-from pathlib import Path
 
-from invoice_etl.models.invoice import Invoice, LineItem
+from invoice_etl.models.invoice import Invoice
 
 logger = logging.getLogger(__name__)
 
