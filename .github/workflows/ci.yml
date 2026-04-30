@@ -1,0 +1,190 @@
+name: CI
+
+on:
+  push:
+    branches: [main, feature/*]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  quality-checks:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.12", "3.13"]
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+          virtualenvs-create: true
+          virtualenvs-in-project: true
+
+      - name: Load cached venv
+        id: cached-poetry-dependencies
+        uses: actions/cache@v4
+        with:
+          path: .venv
+          key: venv-${{ runner.os }}-${{ matrix.python-version }}-${{ hashFiles('**/poetry.lock') }}
+
+      - name: Install dependencies
+        if: steps.cached-poetry-dependencies.outputs.cache-hit != 'true'
+        run: poetry install --no-interaction --no-root
+
+      - name: Install project
+        run: poetry install --no-interaction
+
+      - name: Verify poetry.lock is in sync
+        run: |
+          poetry check --lock
+          if ! git diff --exit-code poetry.lock; then
+            echo "ERROR: poetry.lock is out of sync with pyproject.toml"
+            echo "Run 'poetry lock --no-update' locally and commit the changes"
+            exit 1
+          fi
+
+      - name: Format check with Black
+        run: poetry run black --check .
+        continue-on-error: false
+
+      - name: Lint with Ruff
+        run: poetry run ruff check
+        continue-on-error: false
+
+      - name: Type check with Pyright
+        run: poetry run pyright
+        continue-on-error: false
+
+      - name: Run tests with coverage
+        run: |
+          poetry run pytest --cov=invoice_etl --cov-report=term-missing --cov-report=xml --cov-report=html
+
+      - name: Check coverage threshold
+        run: |
+          poetry run coverage report --fail-under=70
+
+      - name: Upload coverage HTML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-html-report-py${{ matrix.python-version }}
+          path: htmlcov/
+          retention-days: 14
+
+      - name: Upload coverage XML report
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-xml-report-py${{ matrix.python-version }}
+          path: coverage.xml
+          retention-days: 14
+
+      - name: Generate coverage summary
+        run: |
+          {
+            echo "## Coverage Report"
+            echo ""
+            poetry run coverage report --format=markdown
+          } >> "${GITHUB_STEP_SUMMARY}"
+
+  security-scan:
+    name: Security Scanning
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+
+      - name: Check for security vulnerabilities
+        run: |
+          poetry run pip install safety
+          poetry export -f requirements.txt --without-hashes | poetry run safety check --stdin
+        continue-on-error: true
+
+  docs-validation:
+    name: Documentation Validation
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Validate README exists and is not empty
+        run: |
+          if [ ! -f README.md ] || [ ! -s README.md ]; then
+            echo "ERROR: README.md is missing or empty"
+            exit 1
+          fi
+
+      - name: Check for LICENSE file
+        run: |
+          if [ ! -f LICENSE ]; then
+            echo "ERROR: LICENSE file is missing"
+            exit 1
+          fi
+
+      - name: Validate instruction documents exist
+        run: |
+          if [ ! -f .github/copilot-instructions.md ]; then
+            echo "ERROR: .github/copilot-instructions.md is missing"
+            exit 1
+          fi
+
+  actionlint:
+    name: Lint GitHub Actions workflows
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Run actionlint
+        uses: raven-actions/actionlint@v2
+
+  build-check:
+    name: Build Package
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Poetry
+        uses: snok/install-poetry@v1
+        with:
+          version: latest
+
+      - name: Build package
+        run: poetry build
+
+      - name: Verify package can be installed
+        run: |
+          python -m venv test-venv
+          source test-venv/bin/activate
+          pip install dist/*.whl
+          invoice-etl --help
