@@ -24,7 +24,12 @@ cp .env.example .env   # edit values if needed
 docker compose up -d
 
 # 4. Run the pipeline against one or more PDFs
+
+# Load into PostgreSQL (default)
 poetry run invoice-etl path/to/invoice.pdf
+
+# Export to Excel instead (no database required)
+poetry run invoice-etl --output excel path/to/invoice.pdf
 ```
 
 ## Project structure
@@ -34,9 +39,9 @@ invoice-etl/
 ├── src/invoice_etl/
 │   ├── extract/          # PDF text extraction (pdfplumber)
 │   ├── transform/        # Raw text → Pydantic Invoice models
-│   ├── load/             # SQLAlchemy insert into PostgreSQL
+│   ├── load/             # db_loader.py (PostgreSQL) + excel_loader.py (.xlsx)
 │   ├── models/           # Pydantic v2 data models
-│   └── main.py           # CLI entry point
+│   └── main.py           # CLI entry point (--output db|excel)
 ├── tests/                # pytest unit tests
 ├── docker/
 │   └── init.sql          # PostgreSQL schema initialisation

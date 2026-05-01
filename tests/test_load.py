@@ -3,9 +3,13 @@
 from __future__ import annotations
 
 from decimal import Decimal
-from unittest.mock import MagicMock
+from pathlib import Path
+from unittest.mock import MagicMock, patch
+
+import openpyxl
 
 from invoice_etl.load.db_loader import load_invoice
+from invoice_etl.load.excel_loader import load_invoice_to_excel
 from invoice_etl.models.invoice import Invoice, LineItem
 
 
@@ -70,3 +74,103 @@ def test_load_passes_new_line_item_fields_to_insert() -> None:
     assert line_item_params["store_number"] == "00562"
     assert line_item_params["offer_number"] == "545039"
     assert line_item_params["unit_of_measure"] == "EA"
+
+
+# ---------------------------------------------------------------------------
+# excel_loader tests
+# ---------------------------------------------------------------------------
+
+
+def _make_captured_workbook() -> tuple[openpyxl.Workbook, MagicMock]:
+    """Return a (real_wb, mock_save) pair for filesystem-free excel_loader tests.
+
+    The real workbook is used so sheet names and cell contents can be inspected
+    after the function under test writes to it.  The save method is replaced with
+    a no-op mock so no file is written to disk.
+
+    Returns:
+        A tuple of (real Workbook instance, MagicMock replacing ``save``).
+    """
+    real_wb = openpyxl.Workbook()
+    mock_save = MagicMock()
+    real_wb.save = mock_save  # replacing save to prevent filesystem write in tests
+    return real_wb, mock_save
+
+
+def test_load_invoice_to_excel_returns_output_path() -> None:
+    """load_invoice_to_excel returns the output_path passed as argument."""
+    invoice = Invoice(invoice_number="INV-001")
+    real_wb, _ = _make_captured_workbook()
+
+    with patch.object(openpyxl, "Workbook", return_value=real_wb):
+        result = load_invoice_to_excel(invoice, Path("out/invoice.xlsx"))
+
+    assert result == Path("out/invoice.xlsx")
+
+
+def test_load_invoice_to_excel_creates_invoice_and_line_items_sheets() -> None:
+    """load_invoice_to_excel produces exactly two sheets: Invoice and LineItems."""
+    invoice = Invoice(invoice_number="INV-001")
+    real_wb, _ = _make_captured_workbook()
+
+    with patch.object(openpyxl, "Workbook", return_value=real_wb):
+        load_invoice_to_excel(invoice, Path("invoice.xlsx"))
+
+    assert real_wb.sheetnames == ["Invoice", "LineItems"]
+
+
+def test_load_invoice_to_excel_invoice_sheet_has_correct_column_headers() -> None:
+    """The Invoice sheet header row contains all expected invoice field names."""
+    invoice = Invoice(invoice_number="INV-001")
+    real_wb, _ = _make_captured_workbook()
+
+    with patch.object(openpyxl, "Workbook", return_value=real_wb):
+        load_invoice_to_excel(invoice, Path("invoice.xlsx"))
+
+    ws = real_wb["Invoice"]
+    # Header row is row 1; verify the first and last expected column names.
+    assert ws.cell(row=1, column=1).value == "invoice_number"
+    assert ws.cell(row=1, column=13).value == "source_file"
+
+
+def test_load_invoice_to_excel_line_items_sheet_has_correct_column_headers() -> None:
+    """The LineItems sheet header row contains all expected line-item field names."""
+    invoice = Invoice(invoice_number="INV-001")
+    real_wb, _ = _make_captured_workbook()
+
+    with patch.object(openpyxl, "Workbook", return_value=real_wb):
+        load_invoice_to_excel(invoice, Path("invoice.xlsx"))
+
+    ws = real_wb["LineItems"]
+    assert ws.cell(row=1, column=1).value == "description"
+    assert ws.cell(row=1, column=9).value == "unit_of_measure"
+
+
+def test_load_invoice_to_excel_writes_one_data_row_per_line_item() -> None:
+    """The LineItems sheet contains one data row for each line item in the invoice."""
+    line_items = [
+        LineItem(description="Widget A", quantity=Decimal("2"), unit_price=Decimal("5.00")),
+        LineItem(description="Widget B", quantity=Decimal("3"), unit_price=Decimal("10.00")),
+    ]
+    invoice = Invoice(invoice_number="INV-002", line_items=line_items)
+    real_wb, _ = _make_captured_workbook()
+
+    with patch.object(openpyxl, "Workbook", return_value=real_wb):
+        load_invoice_to_excel(invoice, Path("invoice.xlsx"))
+
+    ws = real_wb["LineItems"]
+    # Row 1 is the header; rows 2 and 3 are the two line items.
+    assert ws.cell(row=2, column=1).value == "Widget A"
+    assert ws.cell(row=3, column=1).value == "Widget B"
+
+
+def test_load_invoice_to_excel_saves_to_output_path() -> None:
+    """load_invoice_to_excel calls save with the supplied output path."""
+    invoice = Invoice(invoice_number="INV-001")
+    real_wb, mock_save = _make_captured_workbook()
+    output_path = Path("exports/invoice.xlsx")
+
+    with patch.object(openpyxl, "Workbook", return_value=real_wb):
+        load_invoice_to_excel(invoice, output_path)
+
+    mock_save.assert_called_once_with(output_path)
