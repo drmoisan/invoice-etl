@@ -61,9 +61,6 @@
       "Read(./secrets/**)",
       "Edit(./secrets/**)",
       "Write(./secrets/**)"
-    ],
-    "additionalDirectories": [
-      "c:\\Users\\DanMoisan\\repos\\drm-copilot\\.claude\\skills\\execute-hard-lock"
     ]
   },
   "hooks": {
